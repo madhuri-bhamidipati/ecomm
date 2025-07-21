@@ -13,7 +13,7 @@ pipeline {
                 echo "🔨 Starting Build Stage"
                 sh "rm -rf ${BUILD_DIR}"
                 sh "mkdir -p ${BUILD_DIR}"
-                sh "cp -r ${SOURCE_DIR}/* ${BUILD_DIR}/"
+                sh "rsync -av --exclude='${BUILD_DIR}' ${SOURCE_DIR}/ ${BUILD_DIR}/"
                 echo "✅ Build Completed"
             }
         }
@@ -29,3 +29,4 @@ pipeline {
         }
     }
 }
+
