@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Code') {
             steps {
-                git branch: "${params.BRANCH}", url: 'https://github.com/your-user/ecomm-app.git'
+                git branch: "${params.BRANCH}", url: 'https://github.com/madhuri-bhamidipati/ecomm.git'
             }
         }
 
