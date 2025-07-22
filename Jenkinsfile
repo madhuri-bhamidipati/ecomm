@@ -1,39 +1,27 @@
 pipeline {
-    agent any
+  agent any
 
-    parameters {
-        string(name: 'BRANCH', defaultValue: 'main', description: 'Git branch to build')
-        choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description: 'Deployment Environment')
+  parameters {
+    string(name: 'ENV', defaultValue: 'dev', description: 'Target environment')
+  }
+
+  stages {
+    stage('Deploy to EC2') {
+      steps {
+        sshagent(credentials: ['ec2-ssh-key']) {
+          sh """
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@http://34.200.74.53/ ./deploy.sh'
+              rm -rf ~/ecomm-app || true
+              git clone https://github.com/madhuri-bhamidipati/ecomm-app.git
+              cd ecomm-app
+              chmod +x deploy.sh
+              ./deploy.sh ${ENV}
+            '
+          """
+        }
+      }
     }
+  }
 
-    stages {
-        stage('Clone Code') {
-            steps {
-                git branch: "${params.BRANCH}", url: 'https://github.com/madhuri-bhamidipati/ecomm.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo "Building the application..."
-                sh 'docker build -t ecomm-app:${BUILD_NUMBER} .'
-            }
-        }
-
-        stage('Push or Save Artifact') {
-            steps {
-                echo "Saving artifact..."
-                // Add logic to push to ECR/DockerHub if needed
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo "Deploying to ${params.ENV} environment"
-                sh './deploy.sh ${params.ENV}'
-            }
-        }
-    }
-}
 
 
