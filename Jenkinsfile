@@ -1,32 +1,39 @@
 pipeline {
     agent any
 
-    environment {
-        SOURCE_DIR = "${WORKSPACE}"
-        BUILD_DIR = "build_output"
-        DEPLOY_DIR = "/var/www/html"
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Git branch to build')
+        choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description: 'Deployment Environment')
     }
 
     stages {
+        stage('Clone Code') {
+            steps {
+                git branch: "${params.BRANCH}", url: 'https://github.com/your-user/ecomm-app.git'
+            }
+        }
+
         stage('Build') {
             steps {
-                echo "🔨 Starting Build Stage"
-                sh "rm -rf ${BUILD_DIR}"
-                sh "mkdir -p ${BUILD_DIR}"
-                sh "rsync -av --exclude='${BUILD_DIR}' ${SOURCE_DIR}/ ${BUILD_DIR}/"
-                echo "✅ Build Completed"
+                echo "Building the application..."
+                sh 'docker build -t ecomm-app:${BUILD_NUMBER} .'
+            }
+        }
+
+        stage('Push or Save Artifact') {
+            steps {
+                echo "Saving artifact..."
+                // Add logic to push to ECR/DockerHub if needed
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "🚀 Starting Deploy Stage"
-                sh "sudo rm -rf ${DEPLOY_DIR}/*"
-                sh "sudo cp -r ${BUILD_DIR}/* ${DEPLOY_DIR}/"
-                sh "sudo systemctl restart nginx"
-                echo "✅ Deployment Done"
+                echo "Deploying to ${params.ENV} environment"
+                sh './deploy.sh ${params.ENV}'
             }
         }
     }
 }
+
 
